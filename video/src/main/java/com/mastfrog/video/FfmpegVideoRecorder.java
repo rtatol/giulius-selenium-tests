@@ -30,7 +30,6 @@ import static com.mastfrog.video.VideoModule.log;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.logging.Level;
@@ -41,6 +40,8 @@ import java.util.logging.Logger;
  * @author Tim Boudreau
  */
 final class FfmpegVideoRecorder implements VideoRecorder, Runnable {
+
+    private final static SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("Y-M-d_h-ma");
 
     private Process process;
     private final Settings settings;
@@ -59,9 +60,7 @@ final class FfmpegVideoRecorder implements VideoRecorder, Runnable {
     }
 
     private String dateString() {
-        Date date = new Date();
-        DateFormat df = new SimpleDateFormat("Y-M-d_h-ma");
-        return df.format(date);
+        return DATE_FORMAT.format(new Date());
     }
 
     @Override
@@ -76,7 +75,6 @@ final class FfmpegVideoRecorder implements VideoRecorder, Runnable {
         String filename = settings.getString("video");
         if (filename == null) {
             filename = settings.getString("testMethodQname", "screencast");
-            String base = filename;
             if (!"screencast".equals(filename)) {
                 filename = filename.replace('.', '-');
             }
@@ -90,7 +88,10 @@ final class FfmpegVideoRecorder implements VideoRecorder, Runnable {
 
         System.setProperty("video.file", filename);
 
-        String cmdline = "ffmpeg -y -v 1 -r 15 -f x11grab -s 1280x1024 -i "
+        // switching ffmpeg to libav
+        String command = settings.getBoolean("runWithLibav") ? "avconv" : "ffmpeg";
+
+        String cmdline = command + " -y -v 1 -r 15 -f x11grab -s 1280x1024 -i "
                 + display + " -vcodec libx264 -threads " + threads + " -q:v 2 -r 30 " + filename;
         log("Will run ffmpeg with command-line: '" + cmdline + "'");
         log("Recording video to " + filename);

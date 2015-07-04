@@ -46,6 +46,7 @@ public class VideoModule extends AbstractModule {
     public static void main(String[] args) throws IOException, InterruptedException {
         Settings settings = new SettingsBuilder("video")
                 .add("record.video", "true")
+                .add("runWithLibav", "true")
                 .addDefaultLocations()
                 .parseCommandLineArguments(args).build();
         Dependencies deps = Dependencies.builder()
